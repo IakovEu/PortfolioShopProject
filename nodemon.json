@@ -1,0 +1,7 @@
+{
+	"ext": "ts,json,ejs,css",
+	"exec": "node --loader ts-node/esm index.ts",
+	"paths": {
+		"@shared/*": ["shared/*"]
+	}
+}
