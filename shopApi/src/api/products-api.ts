@@ -3,12 +3,14 @@ import { connection } from '../../index.js';
 import { v4 as uuidv4 } from 'uuid';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { ioServer } from '../../../index.js';
+import { body, param, validationResult } from 'express-validator';
 import {
 	enhanceProductsComments,
 	enhanceProductsImages,
 	getProductsFilterQuery,
 } from '../helpers.js';
 import {
+	AddPairsRequest,
 	ICommentEntity,
 	ImagesRemovePayload,
 	IProductEntity,
@@ -24,6 +26,7 @@ import {
 } from '../services/mapping.js';
 import {
 	DELETE_IMAGES_QUERY,
+	INSERT_MANY_QUERIES,
 	INSERT_PRODUCT_IMAGES_QUERY,
 	INSERT_PRODUCT_QUERY,
 } from '../services/queries.js';
@@ -199,6 +202,16 @@ productsRouter.delete(
 				[req.params.id]
 			);
 
+			await connection!.query<ResultSetHeader>(
+				'DELETE FROM similar_products WHERE related_product_id = ?',
+				[req.params.id]
+			);
+
+			await connection!.query<ResultSetHeader>(
+				'DELETE FROM similar_products WHERE product_id = ?',
+				[req.params.id]
+			);
+
 			res.status(200);
 			res.end();
 		} catch (e) {
@@ -262,6 +275,128 @@ productsRouter.post(
 
 			res.status(200);
 			res.send(`Images have been removed!`);
+		} catch (e) {
+			throwServerError(res, e as Error);
+		}
+	}
+);
+
+// получение списка «похожих товаров» для конкретного товара
+
+productsRouter.get(
+	'/similar/:id',
+	param('id').notEmpty().withMessage('ID не должен быть пустым'),
+	async (req: Request<{ id: string }>, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+		try {
+			const [rows] = await connection!.query<IProductEntity[]>(
+				'SELECT * FROM similar_products WHERE related_product_id = ?',
+				[req.params.id]
+			);
+
+			if (!rows?.[0]) {
+				res.status(404);
+				res.send(`Product with id ${req.params.id} has not similar products`);
+				return;
+			}
+
+			res.send(rows);
+		} catch (e) {
+			throwServerError(res, e as Error);
+		}
+	}
+);
+
+// добавление «похожих товаров» (я не хочу делать маппинг и использую наименования, как в таблице)
+// по заданию я не понял, надо добавлять поля с описанием и тд. в новую таблицу или нет (на всякий случай добавил)
+productsRouter.post(
+	'/similar/add',
+	body('pairs')
+		.isArray({ min: 1 })
+		.withMessage(
+			'Параметр pairs должен быть массивом с минимум одним элементом'
+		),
+	body('pairs.*.product_id')
+		.isString()
+		.withMessage('product_id должен быть строкой'),
+
+	body('pairs.*.title')
+		.optional()
+		.isString()
+		.withMessage('title должен быть строкой'),
+
+	body('pairs.*.description')
+		.optional()
+		.isString()
+		.withMessage('description должен быть строкой'),
+
+	body('pairs.*.price')
+		.optional()
+		.isNumeric()
+		.withMessage('price должен быть числом'),
+
+	body('pairs.*.related_product_id')
+		.isString()
+		.withMessage('related_product_id должен быть строкой'),
+	async (req: Request<{}, {}, AddPairsRequest>, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+		try {
+			const { pairs } = req.body;
+
+			const values = pairs.map((pair) => [
+				pair.product_id,
+				pair.title || null,
+				pair.description || null,
+				pair.price || null,
+				pair.related_product_id,
+			]);
+
+			await connection!.query(INSERT_MANY_QUERIES, [values]);
+
+			res.status(200).send('Pairs added successfully');
+		} catch (e) {
+			throwServerError(res, e as Error);
+		}
+	}
+);
+
+// удаление связей «похожих товаров»
+
+productsRouter.delete(
+	'/similar/remove/:id',
+	body('ids').isArray({ min: 1 }).withMessage('Должен быть передан массив ID'),
+	async (req: Request<{ id: string }>, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+		try {
+			const ids: string[] = req.body.ids;
+
+			const [rows] = await connection!.query<IProductEntity[]>(
+				'SELECT * FROM similar_products WHERE related_product_id IN (?)',
+				[ids]
+			);
+
+			if (!rows?.length) {
+				res.status(404).send('Похожие товары для указанных ID не найдены');
+				return;
+			}
+
+			const [result] = await connection!.query<ResultSetHeader>(
+				'DELETE FROM similar_products WHERE related_product_id IN (?)',
+				[ids]
+			);
+
+			res
+				.status(200)
+				.json({ message: `Удалено ${result.affectedRows} похожих товара(ов)` });
 		} catch (e) {
 			throwServerError(res, e as Error);
 		}

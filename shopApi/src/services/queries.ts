@@ -30,3 +30,8 @@ export const DELETE_IMAGES_QUERY = `
   DELETE FROM images 
   WHERE image_id IN ?;
 `;
+
+export const INSERT_MANY_QUERIES = `
+      INSERT INTO similar_products (product_id, title, description, price, related_product_id)
+      VALUES ?
+`;

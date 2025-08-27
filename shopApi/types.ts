@@ -51,3 +51,15 @@ export type ImagesRemovePayload = string[];
 export interface IUserRequisitesEntity extends IAuthRequisites, RowDataPacket {
 	id: number;
 }
+
+interface Pair {
+  product_id: string;
+  title: string;
+  description: string;
+  price: number;
+  related_product_id: string;
+}
+
+export interface AddPairsRequest {
+  pairs: Pair[];
+}
