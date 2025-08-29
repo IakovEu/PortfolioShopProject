@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import {
 	getProduct,
 	getProducts,
+	getSimilarProduct,
 	removeProduct,
 	searchProducts,
 	updateProduct,
@@ -41,10 +42,17 @@ productsRouter.get(
 	async (req: Request<{ id: string }>, res: Response) => {
 		try {
 			const product = await getProduct(req.params.id);
+			const similarProducts = await getSimilarProduct(req.params.id);
+			const allProducts = await getProducts();
+			const similarIds = new Set(similarProducts?.map((el) => el.product_id));
+			const filteredItems = allProducts.filter((el) => !similarIds.has(el.id));			
 
 			if (product) {
 				res.render('product/product', {
 					item: product,
+					items: filteredItems,
+					currentId: req.params.id,
+					similar: similarProducts,
 				});
 			} else {
 				res.render('product/empty-product', {

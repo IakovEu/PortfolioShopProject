@@ -203,12 +203,7 @@ productsRouter.delete(
 			);
 
 			await connection!.query<ResultSetHeader>(
-				'DELETE FROM similar_products WHERE related_product_id = ?',
-				[req.params.id]
-			);
-
-			await connection!.query<ResultSetHeader>(
-				'DELETE FROM similar_products WHERE product_id = ?',
+				'DELETE FROM similar_products WHERE related_product_id = ? OR product_id = ?',
 				[req.params.id]
 			);
 
@@ -369,36 +364,36 @@ productsRouter.post(
 // удаление связей «похожих товаров»
 
 productsRouter.delete(
-	'/similar/remove/:id',
-	body('ids').isArray({ min: 1 }).withMessage('Должен быть передан массив ID'),
-	async (req: Request<{ id: string }>, res: Response) => {
-		const errors = validationResult(req);
-		if (!errors.isEmpty()) {
-			return res.status(400).json({ errors: errors.array() });
-		}
-		try {
-			const ids: string[] = req.body.ids;
+  '/similar/remove/:id',
+  body('ids').isArray({ min: 1 }).withMessage('Должен быть передан массив ID'),
+  async (req: Request<{ id: string }>, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+      const relatedProductId = req.params.id; // ID из URL
+      const productIds: string[] = req.body.ids; // массив product_id из тела запроса
 
-			const [rows] = await connection!.query<IProductEntity[]>(
-				'SELECT * FROM similar_products WHERE related_product_id IN (?)',
-				[ids]
-			);
+      // Проверка, есть ли такие связи
+      const [rows] = await connection!.query<IProductEntity[]>(
+        'SELECT * FROM similar_products WHERE related_product_id = ? AND product_id IN (?)',
+        [relatedProductId, productIds]
+      );
 
-			if (!rows?.length) {
-				res.status(404).send('Похожие товары для указанных ID не найдены');
-				return;
-			}
+      if (!rows?.length) {
+        return res.status(404).json({ message: 'Похожие товары для указанных ID не найдены' });
+      }
 
-			const [result] = await connection!.query<ResultSetHeader>(
-				'DELETE FROM similar_products WHERE related_product_id IN (?)',
-				[ids]
-			);
+      // Удаление выбранных связей
+      const [result] = await connection!.query<ResultSetHeader>(
+        'DELETE FROM similar_products WHERE related_product_id = ? AND product_id IN (?)',
+        [relatedProductId, productIds]
+      );
 
-			res
-				.status(200)
-				.json({ message: `Удалено ${result.affectedRows} похожих товара(ов)` });
-		} catch (e) {
-			throwServerError(res, e as Error);
-		}
-	}
+      res.status(200).json({ message: `Удалено ${result.affectedRows} похожих товара(ов)` });
+    } catch (e) {
+      throwServerError(res, e as Error);
+    }
+  }
 );

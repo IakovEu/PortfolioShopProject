@@ -79,6 +79,11 @@ product search
 /*
 product edit
  */
+.product-content {
+    display: flex;
+    justify-content: space-between;
+}
+
 .product-edit-fields {
     width: 50%;
 }
@@ -145,4 +150,23 @@ product images
 
 .product-edit-footer {
     margin-top: 60px;
+}
+
+.similar-title {
+    font-weight: 600;
+    margin: 0;
+}
+
+.similar-other-title {
+    font-weight: 600;
+    margin: 30px 0 0;
+}
+
+.similar-prod {
+    display: flex;
+    gap: 20px;
+}
+
+.product-similar{
+    width: 40%;
 }

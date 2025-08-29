@@ -16,6 +16,14 @@ export interface IProduct {
 	images?: IProductImage[];
 }
 
+export interface similarProduct {
+	id: string;
+	product_id: string;
+	title: string;
+	description: string;
+	price: number;
+}
+
 export interface IProductImage {
 	id: string;
 	productId: string;

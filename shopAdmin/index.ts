@@ -31,7 +31,7 @@ export default function shopAdmin(): Express {
 
 	app.use(express.static(__dirname + '/public'));
 
-	app.use(validateSession);
+	// app.use(validateSession);
 	app.use('/auth', authRouter);
 	app.use('/', productsRouter);
 

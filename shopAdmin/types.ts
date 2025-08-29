@@ -4,6 +4,8 @@ export interface IProductEditData {
   price: string;
   mainImage: string;
   newImages?: string;
-  commentsToRemove: string | string[];
+  commentsToRemove?: string | string[];
+  similarToAdd?: string | string[];
+  similarToRemove?: string | string[]
   imagesToRemove: string | string[];
 }
