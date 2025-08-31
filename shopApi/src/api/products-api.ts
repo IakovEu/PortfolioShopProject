@@ -30,6 +30,7 @@ import {
 	INSERT_PRODUCT_IMAGES_QUERY,
 	INSERT_PRODUCT_QUERY,
 } from '../services/queries.js';
+import { IProduct } from '@shared/types.js';
 
 export const productsRouter = Router();
 
@@ -137,7 +138,10 @@ productsRouter.get(
 
 productsRouter.post(
 	'/',
-	async (req: Request<{}, {}, ProductCreatePayload>, res: Response) => {
+	async (
+		req: Request<{}, {}, ProductCreatePayload>,
+		res: Response<IProduct>
+	) => {
 		try {
 			const { title, description, price, images } = req.body;
 			const productId = uuidv4();
@@ -165,7 +169,12 @@ productsRouter.post(
 			);
 			ioServer.emit('update products count', products?.length || 0);
 			res.status(201);
-			res.send(`Product id:${productId} has been added!`);
+			res.send({
+				id: productId,
+				title: title,
+				description: description,
+				price: price,
+			});
 		} catch (e) {
 			throwServerError(res, e as Error);
 		}
@@ -173,7 +182,7 @@ productsRouter.post(
 );
 
 productsRouter.delete(
-	'/:id',
+	'/remove-product/:id',
 	async (req: Request<{ id: string }>, res: Response) => {
 		try {
 			const [rows] = await connection!.query<IProductEntity[]>(
@@ -188,6 +197,11 @@ productsRouter.delete(
 			}
 
 			await connection!.query<ResultSetHeader>(
+				'DELETE FROM similar_products WHERE related_product_id = ? OR product_id = ?',
+				[req.params.id, req.params.id]
+			);
+
+			await connection!.query<ResultSetHeader>(
 				'DELETE FROM images WHERE product_id = ?',
 				[req.params.id]
 			);
@@ -199,11 +213,6 @@ productsRouter.delete(
 
 			await connection!.query<ResultSetHeader>(
 				'DELETE FROM products WHERE product_id = ?',
-				[req.params.id]
-			);
-
-			await connection!.query<ResultSetHeader>(
-				'DELETE FROM similar_products WHERE related_product_id = ? OR product_id = ?',
 				[req.params.id]
 			);
 
@@ -364,36 +373,40 @@ productsRouter.post(
 // удаление связей «похожих товаров»
 
 productsRouter.delete(
-  '/similar/remove/:id',
-  body('ids').isArray({ min: 1 }).withMessage('Должен быть передан массив ID'),
-  async (req: Request<{ id: string }>, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-      const relatedProductId = req.params.id; // ID из URL
-      const productIds: string[] = req.body.ids; // массив product_id из тела запроса
+	'/similar/remove/:id',
+	body('ids').isArray({ min: 1 }).withMessage('Должен быть передан массив ID'),
+	async (req: Request<{ id: string }>, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+		try {
+			const relatedProductId = req.params.id; // ID из URL
+			const productIds: string[] = req.body.ids; // массив product_id из тела запроса
 
-      // Проверка, есть ли такие связи
-      const [rows] = await connection!.query<IProductEntity[]>(
-        'SELECT * FROM similar_products WHERE related_product_id = ? AND product_id IN (?)',
-        [relatedProductId, productIds]
-      );
+			// Проверка, есть ли такие связи
+			const [rows] = await connection!.query<IProductEntity[]>(
+				'SELECT * FROM similar_products WHERE related_product_id = ? AND product_id IN (?)',
+				[relatedProductId, productIds]
+			);
 
-      if (!rows?.length) {
-        return res.status(404).json({ message: 'Похожие товары для указанных ID не найдены' });
-      }
+			if (!rows?.length) {
+				return res
+					.status(404)
+					.json({ message: 'Похожие товары для указанных ID не найдены' });
+			}
 
-      // Удаление выбранных связей
-      const [result] = await connection!.query<ResultSetHeader>(
-        'DELETE FROM similar_products WHERE related_product_id = ? AND product_id IN (?)',
-        [relatedProductId, productIds]
-      );
+			// Удаление выбранных связей
+			const [result] = await connection!.query<ResultSetHeader>(
+				'DELETE FROM similar_products WHERE related_product_id = ? AND product_id IN (?)',
+				[relatedProductId, productIds]
+			);
 
-      res.status(200).json({ message: `Удалено ${result.affectedRows} похожих товара(ов)` });
-    } catch (e) {
-      throwServerError(res, e as Error);
-    }
-  }
+			res
+				.status(200)
+				.json({ message: `Удалено ${result.affectedRows} похожих товара(ов)` });
+		} catch (e) {
+			throwServerError(res, e as Error);
+		}
+	}
 );

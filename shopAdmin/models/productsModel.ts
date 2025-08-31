@@ -30,7 +30,7 @@ export async function getProduct(id: string): Promise<IProduct | null> {
 
 export async function removeProduct(id: string): Promise<void> {
 	const host = `http://${process.env.LOCAL_PATH}:${process.env.LOCAL_PORT}/${process.env.API_PATH}`;
-	await axios.delete(`${host}/products/${id}`);
+	await axios.delete(`${host}/products/remove-product/${id}`);
 }
 
 export async function getSimilarProduct(id: string) {
@@ -38,6 +38,23 @@ export async function getSimilarProduct(id: string) {
 	try {
 		const { data } = await axios.get<similarProduct[]>(
 			`${host}/products/similar/${id}`
+		);
+		return data;
+	} catch (e) {
+		return null;
+	}
+}
+
+export async function createProduct(res: {
+	title: string;
+	description: string | null;
+	price: string | null;
+}) {
+	const host = `http://${process.env.LOCAL_PATH}:${process.env.LOCAL_PORT}/${process.env.API_PATH}`;
+	try {
+		const { data } = await axios.post(
+			`${host}/products`,
+			res
 		);
 		return data;
 	} catch (e) {

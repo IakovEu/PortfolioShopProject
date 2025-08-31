@@ -1,0 +1,21 @@
+<h2>Create new product here</h2>
+<form action="<%= `/${process.env.ADMIN_PATH}/create` %>" method="post">
+
+    <p class="field">
+        <label for="item-title">Title:</label>
+        <input id="item-title" type="text" name="title" />
+    </p>
+
+    <p class="field">
+        <label for="item-description">Description:</label>
+        <textarea id="item-description" rows="3" name="description"></textarea>
+    </p>
+
+    <p class="field">
+        <label for="item-price">Price:</label>
+        <input id="item-price" type="text" name="price" />
+    </p>
+
+    <button type="submit">Save changes</button>
+    <a href="<%= `/${process.env.ADMIN_PATH}` %>">Back</a>
+</form>

@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import {
+	createProduct,
 	getProduct,
 	getProducts,
 	getSimilarProduct,
@@ -37,6 +38,33 @@ productsRouter.get(
 	}
 );
 
+productsRouter.get('/new-product', async (req: Request, res: Response) => {
+	try {
+		res.render('product/create-product');
+	} catch (e) {
+		throwServerError(res, e as Error);
+	}
+});
+
+productsRouter.post(
+	'/create',
+	async (
+		req: Request<{
+			title: string;
+			description: string | null;
+			price: string | null;
+		}>,
+		res: Response
+	) => {
+		try {
+			const answer = await createProduct(req.body);
+			res.redirect(`/${process.env.ADMIN_PATH}/${answer.id}`);
+		} catch (e) {
+			throwServerError(res, e as Error);
+		}
+	}
+);
+
 productsRouter.get(
 	'/:id',
 	async (req: Request<{ id: string }>, res: Response) => {
@@ -45,9 +73,10 @@ productsRouter.get(
 			const similarProducts = await getSimilarProduct(req.params.id);
 			const allProducts = await getProducts();
 			const similarIds = new Set(similarProducts?.map((el) => el.product_id));
-			const filteredItems = allProducts.filter((el) => !similarIds.has(el.id));			
+			const filteredItems = allProducts.filter((el) => !similarIds.has(el.id));
 
 			if (product) {
+				res.locals.showBackToAllProducts = true;
 				res.render('product/product', {
 					item: product,
 					items: filteredItems,

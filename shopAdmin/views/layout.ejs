@@ -13,6 +13,14 @@
         <div class="logo"></div>
         <div>
             <a href="<%= `/${process.env.ADMIN_PATH}/auth/logout` %>">LOGOUT</a>
+            <% if (showAddProduct) { %>
+                <a href="<%= `/${process.env.ADMIN_PATH}/new-product` %>">ADD PRODUCT</a>
+                <% } %>
+
+            <% if (showBackToAllProducts) { %>
+                <a href="<%= `/${process.env.ADMIN_PATH}` %>">BACK</a>
+                <% } %>
+                
         </div>
     </header>
 

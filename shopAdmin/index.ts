@@ -26,12 +26,17 @@ export default function shopAdmin(): Express {
 	// Установка шаблонизатора
 	app.set('view engine', 'ejs');
 	app.set('views', 'shopAdmin/views');
+	app.use((req, res, next) => {
+		res.locals.showAddProduct = true;
+		res.locals.showBackToAllProducts = false;
+		next();
+	});
 	// Поиск макета в который будет встраиваться отсальной ejs
 	app.use(layouts);
 
 	app.use(express.static(__dirname + '/public'));
 
-	// app.use(validateSession);
+	app.use(validateSession);
 	app.use('/auth', authRouter);
 	app.use('/', productsRouter);
 
