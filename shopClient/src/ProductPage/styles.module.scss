@@ -1,0 +1,69 @@
+.title {
+	margin: 0;
+	padding-top: 20px;
+	text-align: center;
+}
+
+.main {
+	background-color: burlywood;
+
+	.product {
+		text-align: center;
+
+		.img {
+			width: 300px;
+		}
+
+		.description {
+			font-size: 18px;
+		}
+
+		.price {
+			font-size: 18px;
+			margin-top: 20px;
+		}
+
+		.comments {
+			margin: 30px;
+			font-size: 18px;
+		}
+
+		.similar {
+			margin-top: 40px;
+
+			.similarProd {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+		}
+
+        .commentForm{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+
+            .formGroup{
+                width: 200px;
+                height: 50px;
+            }
+
+            .saveButton{
+                margin: 40px;
+                background-color: black;
+                color: burlywood;
+                cursor: pointer;
+                width: 200px;
+                height: 50px;
+                border: none;
+                font-size: 16px;
+            }
+
+            .saveButton:active{
+                font-size: 20px;
+            }
+        }
+	}
+}

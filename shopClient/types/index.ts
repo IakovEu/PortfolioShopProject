@@ -22,3 +22,12 @@ export interface IComment {
 	body: string;
 	productId: string;
 }
+
+export interface Similar {
+	description: string;
+	id: number;
+	price: string;
+	product_id: string;
+	related_product_id: string;
+	title: string;
+}

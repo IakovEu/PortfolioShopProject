@@ -1,7 +1,7 @@
-.title{
-    margin: 0;
-    padding-top: 20px;
-    text-align: center;
+.title {
+	margin: 0;
+	padding-top: 20px;
+	text-align: center;
 }
 
 .main {
@@ -23,12 +23,21 @@
 			font-family: 'BlinkMacSystemFont';
 			background-color: transparent;
 			height: 50px;
+
+			.link {
+				color: black;
+				text-decoration: none;
+			}
 		}
 
 		.list:active,
 		.system:active {
 			background-color: black;
 			color: burlywood;
+
+			.link {
+				color: burlywood;
+			}
 		}
 	}
 }

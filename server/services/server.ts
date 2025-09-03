@@ -1,24 +1,32 @@
-import express, { Express } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 
-// Инициализация сервера
 export function initServer(): Express {
-	const port = Number(process.env.LOCAL_PORT);
-	const app = express();
+  const port = Number(process.env.LOCAL_PORT) || 3000;
+  const app = express();
 
-	// Авто парсинг JSON данных в js объект
-	const jsonMiddleware = express.json();
-	app.use(jsonMiddleware);
+  app.use(express.json());
 
-	app.use((req, res, next) => {
-		res.header('Access-Control-Allow-Origin', 'http://localhost:5000');
-		res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
-		res.header('Access-Control-Allow-Headers', 'Content-Type');
-		next();
-	});
+  const allowedOrigins = ['http://localhost:5000', 'http://localhost:5173'];
 
-	app.listen(port, () => {
-		console.log(`Server running on port ${port}`);
-	});
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const origin = req.headers.origin;
+    if (origin && allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+    }
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
 
-	return app;
+    if (req.method === 'OPTIONS') {
+      // Preflight-запрос — сразу ответить 200
+      return res.sendStatus(200);
+    }
+
+    next();
+  });
+
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+
+  return app;
 }

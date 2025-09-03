@@ -48,7 +48,7 @@ commentsRouter.get(
 				return;
 			}
 			const [rows] = await connection!.query<ICommentEntity[]>(
-				'SELECT * FROM comments WHERE comment_id = ?',
+				'SELECT * FROM comments WHERE product_id = ?',
 				[req.params.id]
 			);
 
@@ -59,7 +59,7 @@ commentsRouter.get(
 			}
 
 			res.setHeader('Content-Type', 'application/json');
-			res.send(mapCommentsEntity(rows)[0]);
+			res.send(mapCommentsEntity(rows));
 		} catch (e) {
 			console.debug((e as Error).message);
 			res.status(500);

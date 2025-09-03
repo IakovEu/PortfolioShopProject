@@ -1,11 +1,15 @@
-import type { IProduct } from '../types';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../reducers/store';
 import st from './styles.module.scss';
 import { useNavigate } from 'react-router-dom';
 
-export const MainPage = ({ products }: { products: IProduct[] | null }) => {
+export const MainPage = () => {
+	const products = useSelector((state: RootState) => state.products).products;
 	const navigate = useNavigate();
 	const price = products?.reduce((acc, el) => (acc += el.price), 0);
 
+	console.log(products);
+	
 	return (
 		<>
 			<header>
@@ -25,7 +29,12 @@ export const MainPage = ({ products }: { products: IProduct[] | null }) => {
 						Перейти к списку товаров
 					</button>
 					<button className={st.system}>
-						Перейти в систему администрирования
+						<a
+							className={st.link}
+							href="http://localhost:3000/admin/auth/login"
+							target="blanc">
+							Перейти в систему администрирования
+						</a>
 					</button>
 				</div>
 			</main>

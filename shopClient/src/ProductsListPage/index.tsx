@@ -1,14 +1,12 @@
-import type { IProduct } from '../types';
 import st from './styles.module.scss';
 import prodImg from '../../public/product-placeholder.png';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../reducers/store';
 
-export const ProductsListPage = ({
-	products,
-}: {
-	products: IProduct[] | null;
-}) => {
+export const ProductsListPage = () => {
+	const products = useSelector((state: RootState) => state.products).products;
 	const [search, setSearch] = useState('');
 	const [minPrice, setMinPrice] = useState('');
 	const [maxPrice, setMaxPrice] = useState('');
